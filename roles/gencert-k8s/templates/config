@@ -23,7 +23,7 @@ DNS.3 = kubernetes.default.svc
 DNS.4 = kubernetes.default.svc.{{ k8s_cluster_domain }}
 IP.1 = 127.0.0.1
 IP.2 = ::1
-{% for ip in ansible_play_hosts_all %}
+{% for ip in internal_hosts %}
 IP.{{ loop.index+2 }} = {{ ip }}
 {% endfor %}
 {% for ip in k8s_external_ip %}

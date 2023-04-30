@@ -1,0 +1,7 @@
+---
+- name: create etcd cluster
+  hosts: etcd
+  remote_user: root
+  gather_facts: no
+  roles:
+    - etcd

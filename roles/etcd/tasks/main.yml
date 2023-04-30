@@ -1,6 +1,19 @@
+- name: Prepare internal hosts
+  import_tasks: "{{ playbook_dir }}/tasks/internal_host.yml"
+
 - name: Get etcd nodes
   set_fact:
-    etcd_cluster_define: "{% set etcd_urls=[] %}{% for host in ansible_play_hosts_all %}{{ etcd_urls.append('etcd{0}=https://{1}:2380'.format(loop.index, host)) }}{% endfor %}{{ etcd_urls | join(',') }}"
+    etcd_cluster: "{% set etcd_urls=[] %}{% for host in internal_hosts %}{{ etcd_urls.append('etcd{0}=https://{1}:2380'.format(loop.index, host)) }}{% endfor %}{{ etcd_urls | join(',') }}"
 
-- name: Show index
-  debug: var=ansible_host
+- name: Prepare directory
+  file: path="/etc/etcd" state=directory mode=0755
+
+- name: Prepare config
+  template:
+    src: etcd.conf
+    dest: /etc/etcd/etcd.conf
+
+- name: Copy cert
+  copy:
+    src: "{{ playbook_dir }}/pki/etcd"
+    dest: /etc/etcd/pki

@@ -1,0 +1,5 @@
+---
+- name: Generate internal hosts
+  set_fact:
+    internal_hosts: "{% set internal_hosts=[] %}{% for key, hostvar in hostvars.items() %}{% if 'internal' in hostvar %}{{ internal_hosts.append(hostvar['internal']) }}{% else %}{{ internal_hosts.append(key) }}{% endif %}{% endfor %}{{ internal_hosts }}"
+    internal_host: "{% set hostvar=hostvars[ansible_host] %}{% if 'internal' in hostvar %}{{ hostvar['internal'] }}{% else %}{{ ansible_host }}{% endif %}"
