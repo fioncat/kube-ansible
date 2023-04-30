@@ -1,0 +1,10 @@
+---
+- name: Generate kubernetes cert files
+  hosts: master
+  gather_facts: no
+  connection: local
+  run_once: true
+  vars:
+    expire: 3650
+  roles:
+    - gencert-kubernetes

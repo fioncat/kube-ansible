@@ -1,0 +1,10 @@
+---
+- name: Generate etcd cert files
+  hosts: etcd
+  gather_facts: no
+  connection: local
+  run_once: true
+  vars:
+    expire: 3650
+  roles:
+    - gencert-etcd
