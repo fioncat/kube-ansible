@@ -1,7 +1,8 @@
+[vars]
+# Add your host vars here
+
 [etcd]
-10.1.0.1
-10.1.0.2
+# Add your etcd hosts here
 
 [master]
-10.1.0.1
-10.1.0.2
+# Add your master hosts here

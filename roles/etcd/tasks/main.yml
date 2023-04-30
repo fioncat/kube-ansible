@@ -1,19 +1,58 @@
 - name: Prepare internal hosts
   import_tasks: "{{ playbook_dir }}/tasks/internal_host.yml"
 
-- name: Get etcd nodes
+- name: Generate etcd names
   set_fact:
-    etcd_cluster: "{% set etcd_urls=[] %}{% for host in internal_hosts %}{{ etcd_urls.append('etcd{0}=https://{1}:2380'.format(loop.index, host)) }}{% endfor %}{{ etcd_urls | join(',') }}"
+    etcd_names: "{% set etcd_names={} %}{% for ip, hostvar in internal_hosts.items() %}{% if 'etcd_name' in hostvar %}{% set x=etcd_names.__setitem__(ip, hostvar['etcd_name']) %}{% else %}{% set x=etcd_names.__setitem__(ip, 'etcd{0}'.format(loop.index)) %}{% endif %}{% endfor %}{{ etcd_names }}"
+
+- name: Generate etcd urls
+  set_fact:
+    etcd_peers: "{% set urls=[] %}{% for ip,name in etcd_names.items() %}{{ urls.append('{0}=https://{1}:2380'.format(name, ip)) }}{% endfor %}{{ urls | join(',') }}"
+    etcd_endpoints: "{% set urls=[] %}{% for ip in internal_hosts %}{{ urls.append('https://{0}:2379'.format(ip)) }}{% endfor %}{{ urls | join(',') }}"
 
 - name: Prepare directory
-  file: path="/etc/etcd" state=directory mode=0755
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+    - /etc/etcd
+    - /var/lib/etcd
 
 - name: Prepare config
   template:
-    src: etcd.conf
-    dest: /etc/etcd/etcd.conf
+    src: config.yaml
+    dest: /etc/etcd/config.yaml
+
+- name: Prepare etcdctl config
+  template:
+    src: etcdctl.env
+    dest: /etc/etcd/etcdctl.env
 
 - name: Copy cert
   copy:
     src: "{{ playbook_dir }}/pki/etcd"
-    dest: /etc/etcd/pki
+    dest: /etc/etcd
+
+- name: Rename cert
+  shell: |
+    rm -rf /etc/etcd/pki
+    mv /etc/etcd/etcd /etc/etcd/pki
+
+- name: Copy binary
+  copy:
+    src: "{{ playbook_dir }}/binary/etcd/{{ item }}"
+    dest: "/usr/local/bin"
+    mode: "0755"
+  with_items:
+    - etcd
+    - etcdctl
+
+- name: Prepare service
+  copy:
+    src: "etcd.service"
+    dest: "/usr/lib/systemd/system/etcd.service"
+
+- name: Start service
+  systemd:
+    name: etcd
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
