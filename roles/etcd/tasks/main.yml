@@ -1,0 +1,6 @@
+- name: Get etcd nodes
+  set_fact:
+    etcd_cluster_define: "{% set etcd_urls=[] %}{% for host in ansible_play_hosts_all %}{{ etcd_urls.append('etcd{0}=https://{1}:2380'.format(loop.index, host)) }}{% endfor %}{{ etcd_urls | join(',') }}"
+
+- name: Show index
+  debug: var=ansible_host

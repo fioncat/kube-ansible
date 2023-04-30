@@ -1,0 +1,53 @@
+---
+# Manually generate all ssl cert files for kubernetes.
+# See: https://kubernetes.io/docs/setup/best-practices/certificates/
+# This should only be executed once.
+- name: Prepare directory
+  file: path="{{ playbook_dir }}/pki" state=directory mode=0755
+
+- name: Generate config
+  template:
+    src: config
+    dest: "{{ playbook_dir }}/pki/config"
+
+- name: Generate root ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out ca.key
+    - openssl req -x509 -new -sha256 -nodes -key ca.key -days {{ expire }} -out ca.crt -subj "/CN=kubernetes-ca" -extensions v3_ca -config config
+    - openssl ecparam -name secp521r1 -genkey -noout -out front-proxy-ca.key
+    - openssl req -x509 -new -sha256 -nodes -key front-proxy-ca.key -days {{ expire }} -out front-proxy-ca.crt -subj "/CN=kubernetes-front-proxy-ca" -extensions v3_ca -config config
+
+- name: Generate apiserver ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out apiserver.key
+    - openssl req -new -sha256 -key apiserver.key -subj "/CN=kube-apiserver" | openssl x509 -req -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out apiserver.crt -days {{ expire }} -extensions v3_apiserver -extfile config
+
+- name: Generate apiserver-kubelet-client ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out apiserver-kubelet-client.key
+    - openssl req -new -sha256 -key apiserver-kubelet-client.key -subj "/CN=kube-apiserver-kubelet-client/O=system:masters" | openssl x509 -req -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out apiserver-kubelet-client.crt -days {{ expire }} -extensions v3_client -extfile config
+
+- name: Generate front-proxy-client ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out front-proxy-client.key
+    - openssl req -new -sha256 -key front-proxy-client.key -subj "/CN=front-proxy-client" | openssl x509 -req -sha256 -CA front-proxy-ca.crt -CAkey front-proxy-ca.key -CAcreateserial -out front-proxy-client.crt -days {{ expire }} -extensions v3_client -extfile config
+
+- name: Generate service account certificates
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out sa.key
+    - openssl ec -in sa.key -outform PEM -pubout -out sa.pub

@@ -1,0 +1,31 @@
+[ req ]
+distinguished_name = k8s-crt
+
+[k8s-crt]
+[ v3_ca ]
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, digitalSignature, keyEncipherment, keyCertSign
+
+[ v3_client ]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth
+
+[ v3_apiserver ]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names_cluster
+[ alt_names_cluster ]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.{{ k8s_cluster_domain }}
+IP.1 = 127.0.0.1
+IP.2 = ::1
+{% for ip in ansible_play_hosts_all %}
+IP.{{ loop.index+2 }} = {{ ip }}
+{% endfor %}
+{% for ip in k8s_external_ip %}
+IP.{{ loop.index+2+ansible_play_hosts_all | length }} = {{ ip }}
+{% endfor %}

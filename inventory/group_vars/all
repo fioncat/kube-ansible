@@ -1,0 +1,5 @@
+k8s_cluster_domain: my-cluster
+k8s_external_ip:
+- 10.1.1.1
+- 10.1.1.2
+- 10.1.1.3

@@ -1,0 +1,48 @@
+---
+- name: Prepare directory
+  file: path="{{ playbook_dir }}/pki/etcd" state=directory mode=0755
+
+- name: Generate config
+  template:
+    src: config
+    dest: "{{ playbook_dir }}/pki/etcd/config"
+
+- name: Generate root ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki/etcd"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out ca.key
+    - openssl req -x509 -new -sha256 -nodes -key ca.key -days {{ expire }} -out ca.crt -subj "/CN=etcd-ca" -extensions v3_ca -config config
+
+- name: Generate server ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki/etcd"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out server.key
+    - openssl req -new -sha256 -key server.key -subj "/CN=kube-etcd" | openssl x509 -req -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days {{ expire }} -extensions v3_server -extfile config
+
+- name: Generate peer ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki/etcd"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out peer.key
+    - openssl req -new -sha256 -key peer.key -subj "/CN=kube-etcd-peer" | openssl x509 -req -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out peer.crt -days {{ expire }} -extensions v3_server -extfile config
+
+- name: Generate healthcheck ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki/etcd"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out healthcheck-client.key
+    - openssl req -new -sha256 -key healthcheck-client.key -subj "/CN=kube-etcd-healthcheck-client" | openssl x509 -req -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out healthcheck-client.crt -days {{ expire }} -extensions v3_client -extfile config
+
+- name: Generate apiserver-etcd ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ playbook_dir }}/pki"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out apiserver-etcd-client.key
+    - openssl req -new -sha256 -key apiserver-etcd-client.key -subj "/CN=kube-apiserver-etcd-client/O=system:masters" | openssl x509 -req -sha256 -CA etcd/ca.crt -CAkey etcd/ca.key -CAcreateserial -out apiserver-etcd-client.crt -days {{ expire }} -extensions v3_client -extfile etcd/config
