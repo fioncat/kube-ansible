@@ -1,16 +1,16 @@
-name: "{{ etcd_names[internal_host] }}"
+name: "{{ etcd_names[current_node] }}"
 data-dir: "/var/lib/etcd/default.etcd"
 
-listen-peer-urls: "https://{{ internal_host }}:2380"
-listen-client-urls: "https://{{ internal_host }}:2379,http://127.0.0.1:2379"
+listen-peer-urls: "https://{{ current_node }}:2380"
+listen-client-urls: "https://{{ current_node }}:2379,http://127.0.0.1:2379"
 max-snapshots: 5
 max-wals: 5
 
-initial-advertise-peer-urls: "https://{{ internal_host }}:2380"
+initial-advertise-peer-urls: "https://{{ current_node }}:2380"
 initial-cluster: "{{ etcd_peers }}"
 initial-cluster-state: "new"
 initial-cluster-token: "etcd-cluster"
-advertise-client-urls: "https://{{ internal_host }}:2379"
+advertise-client-urls: "https://{{ current_node }}:2379"
 
 client-transport-security:
   trusted-ca-file: "/etc/etcd/pki/ca.crt"

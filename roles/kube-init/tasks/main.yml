@@ -1,0 +1,8 @@
+---
+- name: Prepare groups
+  import_tasks: "{{ playbook_dir }}/tasks/group.yml"
+
+- name: Generate config
+  template:
+    src: "kubeadm-init-config.yaml"
+    dest: "/etc/kubernetes"

@@ -5,15 +5,14 @@ bootstrapTokens:
     description: "kubeadm bootstrap token"
     ttl: "24h"
 nodeRegistration:
-  name: "{{ internal_host }}"
-  criSocket: "{{ runtime_socket }}"
-  kubeletExtraArgs:
-    v: 4
+  name: "{{ current_node }}"
+  criSocket: "unix://{{ runtime_socket }}"
+  kubeletExtraArgs: {}
   ignorePreflightErrors:
     - IsPrivilegedUser
   imagePullPolicy: "IfNotPresent"
 localAPIEndpoint:
-  advertiseAddress: "{{ internal_host }}"
+  advertiseAddress: "{{ current_node }}"
   bindPort: 6443
 
 ---
@@ -22,28 +21,27 @@ kind: ClusterConfiguration
 etcd:
   external:
     endpoints:
-    - "10.100.0.1:2379"
-    - "10.100.0.2:2379"
-    caFile: "/etcd/kubernetes/pki/etcd/ca.crt"
-    certFile: "/etcd/kubernetes/pki/apiserver-etcd-client.cert"
-    keyFile: "/etcd/kubernetes/pki/apiserver-etcd-client.key"
+{% for node in etcd_nodes %}
+    - "https://{{ node }}:2379"
+{% endfor %}
+    caFile: "/etc/kubernetes/pki/etcd/ca.crt"
+    certFile: "/etc/kubernetes/pki/apiserver-etcd-client.crt"
+    keyFile: "/etc/kubernetes/pki/apiserver-etcd-client.key"
 networking:
   serviceSubnet: "{{ service_cidr }}"
   podSubnet: "{{ pod_cidr }}"
   dnsDomain: "{{ cluster_domain }}"
-controlPlaneEndpoint: "{{ internal_host }}:6443"
+controlPlaneEndpoint: "{{ current_node }}:6443"
 apiServer:
   extraArgs:
     authorization-mode: "Node,RBAC"
   timeoutForControlPlane: 4m0s
 controllerManager:
-  extraArgs:
-    "node-cidr-mask-size": "20"
+  extraArgs: {}
 scheduler:
-  extraArgs:
-    address: "10.100.0.1"
+  extraArgs: {}
 certificatesDir: "/etc/kubernetes/pki"
-imageRepository: "{{ image_registry }}"
+imageRepository: "{{ bootstrap_image_registry }}"
 clusterName: "{{ cluster_name }}"
 
 ---

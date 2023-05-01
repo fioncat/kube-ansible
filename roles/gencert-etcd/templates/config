@@ -20,6 +20,6 @@ subjectAltName = @alt_names_cluster
 DNS.1 = loalhost
 IP.1 = 127.0.0.1
 IP.2 = ::1
-{% for ip in internal_hosts %}
-IP.{{ loop.index+2 }} = {{ ip }}
+{% for node in etcd_nodes %}
+IP.{{ loop.index+2 }} = {{ node }}
 {% endfor %}

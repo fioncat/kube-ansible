@@ -1,6 +1,6 @@
 ---
-- name: Prepare internal hosts
-  import_tasks: "{{ playbook_dir }}/tasks/internal_host.yml"
+- name: Prepare groups
+  import_tasks: "{{ playbook_dir }}/tasks/group.yml"
 
 - name: Prepare directory
   file: path="{{ playbook_dir }}/pki/etcd" state=directory mode=0755

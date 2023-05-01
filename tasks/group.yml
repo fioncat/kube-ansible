@@ -1,0 +1,7 @@
+---
+- name: group nodes
+  set_fact:
+    etcd_nodes: "{% set nodes={} %}{% for host in groups['etcd'] %}{% set hostvar=hostvars[host] %}{% if 'node' in hostvar %}{% set x=nodes.__setitem__(hostvar['node'], hostvar) %}{% else %}{% set x=nodes.__setitem__(host, hostvar) %}{% endif %}{% endfor %}{{ nodes }}"
+    master_nodes: "{% set nodes={} %}{% for host in groups['master'] %}{% set hostvar=hostvars[host] %}{% if 'node' in hostvar %}{% set x=nodes.__setitem__(hostvar['node'], hostvar) %}{% else %}{% set x=nodes.__setitem__(host, hostvar) %}{% endif %}{% endfor %}{{ nodes }}"
+    worker_nodes: "{% set nodes={} %}{% for host in groups['worker'] %}{% set hostvar=hostvars[host] %}{% if 'node' in hostvar %}{% set x=nodes.__setitem__(hostvar['node'], hostvar) %}{% else %}{% set x=nodes.__setitem__(host, hostvar) %}{% endif %}{% endfor %}{{ nodes }}"
+    current_node: "{% set hostvar=hostvars[ansible_host] %}{% if 'node' in hostvar %}{{ hostvar['node'] }}{% else %}{{ ansible_host }}{% endif %}"

@@ -1,0 +1,7 @@
+---
+- name: init kubernetes cluster
+  hosts: admin
+  remote_user: root
+  gather_facts: no
+  roles:
+    - kube-init

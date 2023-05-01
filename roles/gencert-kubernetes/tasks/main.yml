@@ -1,6 +1,6 @@
 ---
-- name: Prepare internal hosts
-  import_tasks: "{{ playbook_dir }}/tasks/internal_host.yml"
+- name: Prepare groups
+  import_tasks: "{{ playbook_dir }}/tasks/group.yml"
 
 # Manually generate all ssl cert files for kubernetes.
 # See: https://kubernetes.io/docs/setup/best-practices/certificates/

@@ -1,14 +1,14 @@
-- name: Prepare internal hosts
-  import_tasks: "{{ playbook_dir }}/tasks/internal_host.yml"
+- name: Prepare groups
+  import_tasks: "{{ playbook_dir }}/tasks/group.yml"
 
 - name: Generate etcd names
   set_fact:
-    etcd_names: "{% set etcd_names={} %}{% for ip, hostvar in internal_hosts.items() %}{% if 'etcd_name' in hostvar %}{% set x=etcd_names.__setitem__(ip, hostvar['etcd_name']) %}{% else %}{% set x=etcd_names.__setitem__(ip, 'etcd{0}'.format(loop.index)) %}{% endif %}{% endfor %}{{ etcd_names }}"
+    etcd_names: "{% set etcd_names={} %}{% for node, hostvar in etcd_nodes.items() %}{% if 'etcd_name' in hostvar %}{% set x=etcd_names.__setitem__(node, hostvar['etcd_name']) %}{% else %}{% set x=etcd_names.__setitem__(node, 'etcd{0}'.format(loop.index)) %}{% endif %}{% endfor %}{{ etcd_names }}"
 
 - name: Generate etcd urls
   set_fact:
-    etcd_peers: "{% set urls=[] %}{% for ip,name in etcd_names.items() %}{{ urls.append('{0}=https://{1}:2380'.format(name, ip)) }}{% endfor %}{{ urls | join(',') }}"
-    etcd_endpoints: "{% set urls=[] %}{% for ip in internal_hosts %}{{ urls.append('https://{0}:2379'.format(ip)) }}{% endfor %}{{ urls | join(',') }}"
+    etcd_peers: "{% set urls=[] %}{% for node,name in etcd_names.items() %}{{ urls.append('{0}=https://{1}:2380'.format(name, node)) }}{% endfor %}{{ urls | join(',') }}"
+    etcd_endpoints: "{% set urls=[] %}{% for node in etcd_nodes %}{{ urls.append('https://{0}:2379'.format(node)) }}{% endfor %}{{ urls | join(',') }}"
 
 - name: Prepare directory
   file: path="{{ item }}" state=directory mode=0755

@@ -6,7 +6,10 @@
     mode: "0755"
 
 - name: Prepare config directory
-  file: path="/etc/kubernetes" state=directory mode=0755
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+    - "/etc/kubernetes"
+    - "/etc/systemd/system/kubelet.service.d"
 
 - name: Copy cert
   copy:
@@ -18,13 +21,16 @@
     src: "kubelet.service"
     dest: "/usr/lib/systemd/system/kubelet.service"
 
+- name: Prepare config
+  copy:
+    src: "10-kubeadm.conf"
+    dest: "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
+
+# The kubelet is now restarting every few seconds, as it
+# waits in a crashloop for kubeadm to tell it what to do.
 - name: Start service
   systemd:
     name: kubelet
     state: restarted
     enabled: yes
     daemon_reload: yes
-    # The kubelet is now restarting every few seconds, as it
-    # waits in a crashloop for kubeadm to tell it what to do.
-    # So donot block the process.
-    no_block: yes
