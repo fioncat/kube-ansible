@@ -1,0 +1,30 @@
+---
+- name: Copy binary
+  copy:
+    src: "{{ playbook_dir }}/binary/kubernetes/"
+    dest: "/usr/local/bin"
+    mode: "0755"
+
+- name: Prepare config directory
+  file: path="/etc/kubernetes" state=directory mode=0755
+
+- name: Copy cert
+  copy:
+    src: "{{ playbook_dir }}/pki"
+    dest: "/etc/kubernetes"
+
+- name: Prepare service
+  copy:
+    src: "kubelet.service"
+    dest: "/usr/lib/systemd/system/kubelet.service"
+
+- name: Start service
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+    # The kubelet is now restarting every few seconds, as it
+    # waits in a crashloop for kubeadm to tell it what to do.
+    # So donot block the process.
+    no_block: yes

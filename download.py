@@ -111,6 +111,24 @@ def download_runtime(data):
         execute(["rm", "binary/runtime/crictl.tar.gz"])
 
 
+def download_kubernetes(data):
+    ver = get_version(data, "kubernetes")
+    if not skip_download("binary/kubernetes", "kubeadm"):
+        url = f"https://dl.k8s.io/release/v{ver}/bin/linux/amd64/kubeadm"
+        info("Downloading kubeadm...")
+        download(url, "binary/kubernetes/kubeadm")
+
+    if not skip_download("binary/kubernetes", "kubelet"):
+        url = f"https://dl.k8s.io/release/v{ver}/bin/linux/amd64/kubelet"
+        info("Downloading kubelet...")
+        download(url, "binary/kubernetes/kubelet")
+
+    if not skip_download("binary/kubernetes", "kubectl"):
+        url = f"https://dl.k8s.io/release/v{ver}/bin/linux/amd64/kubectl"
+        info("Downloading kubectl...")
+        download(url, "binary/kubernetes/kubectl")
+
+
 def main():
     info("parse versions")
     data = read_versions()
@@ -120,6 +138,9 @@ def main():
 
     info("handle runtime")
     download_runtime(data)
+
+    info("handle kubernetes")
+    download_kubernetes(data)
 
 
 if __name__ == '__main__':

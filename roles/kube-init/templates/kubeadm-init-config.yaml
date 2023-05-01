@@ -24,12 +24,12 @@ etcd:
     endpoints:
     - "10.100.0.1:2379"
     - "10.100.0.2:2379"
-    caFile: "/etcd/kubernetes/pki/etcd-ca.crt"
+    caFile: "/etcd/kubernetes/pki/etcd/ca.crt"
     certFile: "/etcd/kubernetes/pki/apiserver-etcd-client.cert"
     keyFile: "/etcd/kubernetes/pki/apiserver-etcd-client.key"
 networking:
   serviceSubnet: "{{ service_cidr }}"
-  # podSubnet: "10.244.0.0/24"
+  podSubnet: "{{ pod_cidr }}"
   dnsDomain: "{{ cluster_domain }}"
 controlPlaneEndpoint: "{{ internal_host }}:6443"
 apiServer:

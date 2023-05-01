@@ -1,0 +1,14 @@
+---
+- name: install kubelet for control plane
+  hosts: master
+  remote_user: root
+  gather_facts: no
+  roles:
+    - kubelet
+
+- name: install kubelet for worker
+  hosts: worker
+  remote_user: root
+  gather_facts: no
+  roles:
+    - kubelet
