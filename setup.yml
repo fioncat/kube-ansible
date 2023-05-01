@@ -1,0 +1,16 @@
+---
+- name: Setup etcd
+  hosts: etcd
+  remote_user: root
+  gather_facts: no
+  roles:
+    - etcd
+
+- name: Setup kubernetes
+  hosts: nodes
+  remote_user: root
+  gather_facts: yes
+  roles:
+    - runtime
+    - kubelet
+    - { role: kube-init, when: "'init' in hostvars[ansible_host]" }

@@ -4,5 +4,8 @@
 
 - name: Generate config
   template:
-    src: "kubeadm-init-config.yaml"
+    src: "kubeadm-init.yaml"
     dest: "/etc/kubernetes"
+
+- name: Init kubernetes
+  shell: kubeadm init --config /etc/kubernetes/kubeadm-init.yaml

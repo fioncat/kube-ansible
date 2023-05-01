@@ -1,6 +1,6 @@
 ---
-- name: Generate etcd cert files
-  hosts: etcd
+- name: Generate cert files
+  hosts: nodes
   gather_facts: no
   connection: local
   run_once: true
@@ -8,3 +8,4 @@
     expire: 3650
   roles:
     - gencert-etcd
+    - gencert-kubernetes
