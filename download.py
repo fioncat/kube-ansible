@@ -60,15 +60,15 @@ def download_etcd(data):
     if skip_download("binary/etcd", "etcd"):
         return
     ver = get_version(data, "etcd")
-    url = f"https://github.com/etcd-io/etcd/releases/download/{ver}/etcd-{ver}-linux-amd64.tar.gz"
+    url = f"https://github.com/etcd-io/etcd/releases/download/v{ver}/etcd-v{ver}-linux-amd64.tar.gz"
 
     info("Downloading etcd...")
     download(url, "binary/etcd/etcd.tar.gz")
 
-    info("Unzip etcd..")
+    info("Unzipping etcd..")
     execute(["tar", "xzf", "binary/etcd/etcd.tar.gz", "-C", "binary/etcd"])
 
-    out_dir = f"binary/etcd/etcd-{ver}-linux-amd64"
+    out_dir = f"binary/etcd/etcd-v{ver}-linux-amd64"
 
     execute(["mv", f"{out_dir}/etcd", "binary/etcd/etcd"])
     execute(["mv", f"{out_dir}/etcdctl", "binary/etcd/etcdctl"])
@@ -77,10 +77,49 @@ def download_etcd(data):
     execute(["rm", "-rf", out_dir])
 
 
+def download_runtime(data):
+    runtime = get_version(data, "runtime")
+    if not skip_download("binary/runtime", "runc"):
+        ver = get_version(runtime, "runc")
+        url = f"https://github.com/opencontainers/runc/releases/download/v{ver}/runc.amd64"
+        info("Downloading runc...")
+        download(url, "binary/runtime/runc")
+
+    if not skip_download("binary/runtime", "containerd"):
+        ver = get_version(runtime, "containerd")
+        url = f"https://github.com/containerd/containerd/releases/download/v{ver}/containerd-{ver}-linux-amd64.tar.gz"
+        info("Downloading containerd...")
+        download(url, "binary/runtime/containerd.tar.gz")
+        info("Unzipping containerd...")
+        execute([
+            "tar", "xzf", "binary/runtime/containerd.tar.gz", "-C",
+            "binary/runtime"
+        ])
+        execute(["mv", "binary/runtime/bin", "binary/runtime/containerd"])
+        execute(["rm", "binary/runtime/containerd.tar.gz"])
+
+    if not skip_download("binary/runtime", "crictl"):
+        ver = get_version(runtime, "crictl")
+        url = f"https://github.com/kubernetes-sigs/cri-tools/releases/download/v{ver}/crictl-v{ver}-linux-amd64.tar.gz"
+        info("Downloading critl...")
+        download(url, "binary/runtime/crictl.tar.gz")
+        execute([
+            "tar", "xzf", "binary/runtime/crictl.tar.gz", "-C",
+            "binary/runtime"
+        ])
+        info("Unzipping crictl...")
+        execute(["rm", "binary/runtime/crictl.tar.gz"])
+
+
 def main():
-    info("begin to handle etcd")
+    info("parse versions")
     data = read_versions()
+
+    info("handle etcd")
     download_etcd(data)
+
+    info("handle runtime")
+    download_runtime(data)
 
 
 if __name__ == '__main__':

@@ -9,6 +9,7 @@ Type=notify
 WorkingDirectory=/var/lib/etcd/
 ExecStart=/usr/local/bin/etcd --config-file=/etc/etcd/config.yaml
 Restart=always
+RestartSec=5
 LimitNOFILE=65536
 
 [Install]

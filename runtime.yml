@@ -1,0 +1,14 @@
+---
+- name: install runtime for control plane
+  hosts: master
+  remote_user: root
+  gather_facts: yes
+  roles:
+    - runtime
+
+- name: install runtime for worker
+  hosts: worker
+  remote_user: root
+  gather_facts: yes
+  roles:
+    - runtime

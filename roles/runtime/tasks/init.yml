@@ -1,0 +1,36 @@
+- name: Disable memory swap
+  shell: swapoff -a
+
+- name: Restart rsyslog
+  systemd:
+    name: rsyslog
+    state: restarted
+    enabled: true
+
+- name: Set hostname
+  shell: hostnamectl set-hostname $(hostname)
+
+- name: Set IP local port range
+  shell: |
+    sed -i '/^net.ipv4.ip_local_port_range*/d' /etc/sysctl.conf
+    echo net.ipv4.ip_local_port_range = 32768 60999 >> /etc/sysctl.conf
+    sysctl -p
+
+- name: Set max user instance
+  shell: |
+    echo fs.inotify.max_user_instances = 16384 >> /etc/sysctl.conf
+    sysctl -p
+
+- name: Disable network manager
+  when: ansible_distribution == "CentOS"
+  systemd:
+    name: NetworkManager
+    enabled: false
+    state: stopped
+
+- name: Disable network manager wait online
+  when: ansible_distribution == "CentOS"
+  systemd:
+    name: NetworkManager-wait-online.service
+    enabled: false
+    state: stopped

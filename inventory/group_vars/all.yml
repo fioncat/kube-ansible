@@ -1,0 +1,18 @@
+cluster_name: my-cluster
+cluster_domain: cluster.local
+
+bootstrap_token: ""
+
+# Add your k8s loadbalancer ip here
+apiserver_loadbalancers: []
+
+service_cidr: ""
+pod_cidr: ""
+
+image_registry: ""
+
+apiserver_args: {}
+controller_manager_args: {}
+scheduler_args: {}
+
+runtime_socket: /run/containerd/containerd.sock

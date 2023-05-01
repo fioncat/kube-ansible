@@ -1,0 +1,49 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+bootstrapTokens:
+  - token: "{{ bootstrap_token }}"
+    description: "kubeadm bootstrap token"
+    ttl: "24h"
+nodeRegistration:
+  name: "{{ internal_host }}"
+  criSocket: "{{ runtime_socket }}"
+  kubeletExtraArgs:
+    v: 4
+  ignorePreflightErrors:
+    - IsPrivilegedUser
+  imagePullPolicy: "IfNotPresent"
+localAPIEndpoint:
+  advertiseAddress: "{{ internal_host }}"
+  bindPort: 6443
+
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+etcd:
+  external:
+    endpoints:
+    - "10.100.0.1:2379"
+    - "10.100.0.2:2379"
+    caFile: "/etcd/kubernetes/pki/etcd-ca.crt"
+    certFile: "/etcd/kubernetes/pki/apiserver-etcd-client.cert"
+    keyFile: "/etcd/kubernetes/pki/apiserver-etcd-client.key"
+networking:
+  serviceSubnet: "{{ service_cidr }}"
+  # podSubnet: "10.244.0.0/24"
+  dnsDomain: "{{ cluster_domain }}"
+controlPlaneEndpoint: "{{ internal_host }}:6443"
+apiServer:
+  extraArgs:
+    authorization-mode: "Node,RBAC"
+  timeoutForControlPlane: 4m0s
+controllerManager:
+  extraArgs:
+    "node-cidr-mask-size": "20"
+scheduler:
+  extraArgs:
+    address: "10.100.0.1"
+certificatesDir: "/etc/kubernetes/pki"
+imageRepository: "{{ image_registry }}"
+clusterName: "{{ cluster_name }}"
+
+---

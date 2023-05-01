@@ -1,3 +1,0 @@
-k8s_cluster_domain: my-cluster
-k8s_external_ip:
-# Add your k8s loadbalancer ip here

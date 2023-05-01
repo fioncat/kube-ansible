@@ -1,3 +1,9 @@
 {
-  "etcd": "v3.4.25"
+  "etcd": "3.4.25",
+  "runtime": {
+    "runc": "1.1.7",
+    "containerd": "1.6.20",
+    "crictl": "1.27.0"
+  },
+  "kubernetes": "1.24.12"
 }

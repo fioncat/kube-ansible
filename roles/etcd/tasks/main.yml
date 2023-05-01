@@ -14,6 +14,7 @@
   file: path="{{ item }}" state=directory mode=0755
   with_items:
     - /etc/etcd
+    - /etc/etcd/pki
     - /var/lib/etcd
 
 - name: Prepare config
@@ -28,13 +29,8 @@
 
 - name: Copy cert
   copy:
-    src: "{{ playbook_dir }}/pki/etcd"
-    dest: /etc/etcd
-
-- name: Rename cert
-  shell: |
-    rm -rf /etc/etcd/pki
-    mv /etc/etcd/etcd /etc/etcd/pki
+    src: "{{ playbook_dir }}/pki/etcd/"
+    dest: /etc/etcd/pki
 
 - name: Copy binary
   copy:
