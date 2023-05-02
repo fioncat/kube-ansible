@@ -1,0 +1,14 @@
+---
+- name: Prepare cni directory
+  file: path="/opt/cni/bin" state=directory mode=0755
+
+- name: Copy cni binary
+  copy:
+    src: "{{ playbook_dir }}/binary/cni/cni.tar.gz"
+    dest: "/opt/cni/bin"
+
+- name: Unzip cni binary
+  shell: "{{ item }}"
+  with_items:
+    - tar -xzf /opt/cni/bin/cni.tar.gz -C /opt/cni/bin
+    - rm /opt/cni/bin/cni.tar.gz

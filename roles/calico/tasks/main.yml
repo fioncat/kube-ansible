@@ -1,0 +1,26 @@
+---
+- name: Prepare directory
+  file: path="/etc/kubernetes/calico" state=directory mode=0755
+
+- name: Copy yaml
+  template:
+    src: "{{ item }}"
+    dest: "/etc/kubernetes/calico"
+  with_items:
+    - "config.yaml"
+    - "{{ playbook_dir }}/binary/calico/tigera-operator.yaml"
+
+- name: Create resources
+  shell: "kubectl --kubeconfig /etc/kubernetes/admin.conf create -f {{ item }}"
+  with_items:
+    - "/etc/kubernetes/calico/tigera-operator.yaml"
+    - "/etc/kubernetes/calico/config.yaml"
+
+# TODO: use kubectl to poll calico status
+- name: Wait 10s for calico ready
+  pause:
+    seconds: 10
+
+# Restart coredns to let it use calico network
+- name: Restart coredns
+  shell: "kubectl --kubeconfig /etc/kubernetes/admin.conf -n kube-system rollout restart coredns"

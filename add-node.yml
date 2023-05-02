@@ -1,0 +1,9 @@
+---
+- name: Add kubernetes node
+  hosts: tofix
+  remote_user: root
+  gather_facts: yes
+  roles:
+    - runtime
+    - kubelet
+    - kube-join

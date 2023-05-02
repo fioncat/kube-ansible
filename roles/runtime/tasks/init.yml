@@ -35,14 +35,18 @@
     enabled: false
     state: stopped
 
-- name: Turn on netfilter
+- name: Disable selinux
+  ansible.posix.selinux:
+    state: disabled
+
+- name: Enable netfilter
   shell: "{{ item }}"
   with_items:
     - modprobe br_netfilter
     - echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables
     - echo 1 > /proc/sys/net/bridge/bridge-nf-call-ip6tables
 
-- name: Trun on ip_forward
+- name: Enable ip_forward
   shell: echo 1 > /proc/sys/net/ipv4/ip_forward
 
 - name: Install conntrack

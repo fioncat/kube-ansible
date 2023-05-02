@@ -14,3 +14,5 @@
     - runtime
     - kubelet
     - { role: kube-init, when: "'init' in hostvars[ansible_host]" }
+    - { role: calico, when: "calico_enable and 'init' in hostvars[ansible_host]" }
+    - { role: kube-join, when: "'init' not in hostvars[ansible_host]" }

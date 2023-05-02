@@ -1,6 +1,9 @@
 - name: init
   import_tasks: init.yml
 
+- name: cni
+  import_tasks: cni.yml
+
 - name: Prepare dirs
   file:
     dest: "{{item}}"

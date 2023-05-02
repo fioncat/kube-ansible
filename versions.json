@@ -5,5 +5,7 @@
     "containerd": "1.6.20",
     "crictl": "1.27.0"
   },
-  "kubernetes": "1.24.12"
+  "kubernetes": "1.24.12",
+  "cni": "1.2.0",
+  "calico": "3.25.1"
 }

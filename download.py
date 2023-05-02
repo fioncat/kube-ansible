@@ -129,6 +129,30 @@ def download_kubernetes(data):
         download(url, "binary/kubernetes/kubectl")
 
 
+def download_cni(data):
+    if skip_download("binary/cni", "cni.tar.gz"):
+        return
+    ver = get_version(data, "cni")
+    url = f"https://github.com/containernetworking/plugins/releases/download/v{ver}/cni-plugins-linux-amd64-v{ver}.tgz"
+    info("Downloading cni...")
+    download(url, "binary/cni/cni.tar.gz")
+
+
+def download_calico(data):
+    ver = get_version(data, "calico")
+    if skip_download("binary/calico", "tigera-operator.yaml"):
+        return
+    url = f"https://raw.githubusercontent.com/projectcalico/calico/v{ver}/manifests/tigera-operator.yaml"
+    info("Downloading calico...")
+    download(url, "binary/calico/tigera-operator.yaml")
+    with open("binary/calico/tigera-operator.yaml", 'r+') as file:
+        data = file.read()
+        data = data.replace("quay.io/tigera/operator",
+                            '{{ calico_operator_image }}')
+    with open("binary/calico/tigera-operator.yaml", 'w+') as file:
+        file.write(data)
+
+
 def main():
     info("parse versions")
     data = read_versions()
@@ -141,6 +165,12 @@ def main():
 
     info("handle kubernetes")
     download_kubernetes(data)
+
+    info("handle cni")
+    download_cni(data)
+
+    info("handle calico")
+    download_calico(data)
 
 
 if __name__ == '__main__':

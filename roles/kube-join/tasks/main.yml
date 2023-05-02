@@ -1,0 +1,11 @@
+---
+- name: Prepare groups
+  import_tasks: "{{ playbook_dir }}/tasks/group.yml"
+
+- name: Generate config
+  template:
+    src: "kubeadm-join.yaml"
+    dest: "/etc/kubernetes"
+
+- name: Join kubernetes
+  shell: "kubeadm join --config /etc/kubernetes/kubeadm-join.yaml"
