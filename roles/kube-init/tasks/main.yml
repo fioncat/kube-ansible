@@ -9,3 +9,6 @@
 
 - name: Init kubernetes
   shell: kubeadm init --config /etc/kubernetes/kubeadm-init.yaml
+
+- name: Prepare kubeconfig
+  import_tasks: "{{ playbook_dir }}/tasks/kubeconfig.yml"
