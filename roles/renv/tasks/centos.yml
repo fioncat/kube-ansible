@@ -1,0 +1,21 @@
+- name: Disable network manager
+  systemd:
+    name: NetworkManager
+    enabled: false
+    state: stopped
+
+- name: Disable network manager wait online
+  systemd:
+    name: NetworkManager-wait-online.service
+    enabled: false
+    state: stopped
+
+- name: Install requirements
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "conntrack"
+    - "socat"
+    - "nmap-ncat"
+    - "ipvsadm"

@@ -1,0 +1,11 @@
+---
+- name: Prepare directory
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+    - /etc/etcd
+    - /etc/etcd/pki
+
+- name: Copy cert files
+  copy:
+    src: "{{ etcd_cert_dir }}/"
+    dest: "/etc/etcd/pki"

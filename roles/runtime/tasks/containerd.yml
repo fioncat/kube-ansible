@@ -1,0 +1,65 @@
+---
+- name: Prepare directory
+  file:
+    dest: "{{item}}"
+    state: directory
+  with_items:
+    - /etc/containerd
+    - /var/lib/containerd
+    - /run/containerd
+
+- name: Copy runc binary
+  copy:
+    src: "{{ runc_bin_path }}"
+    dest: "/usr/local/sbin/runc"
+    mode: "0755"
+
+- name: Copy containerd binary
+  copy:
+    src: "{{ containerd_bin_path }}"
+    dest: "/root/containerd.tar.gz"
+
+- name: Prepare containerd binary
+  shell: "{{ item }}"
+  args:
+    chdir: "/root"
+  with_items:
+    - "tar -xzf containerd.tar.gz"
+    - "bash -c 'cp /root/bin/* /usr/local/bin'"
+    - "rm containerd.tar.gz"
+    - "rm -rf bin"
+
+- name: Copy crictl binary
+  copy:
+    src: "{{ crictl_bin_path }}"
+    dest: "/root/crictl.tar.gz"
+
+- name: Prepare crictl binary
+  shell: "{{ item }}"
+  args:
+    chdir: "/root"
+  with_items:
+    - "tar -xzf crictl.tar.gz -C /usr/local/bin"
+    - "rm crictl.tar.gz"
+
+- name: Generate config
+  template:
+    src: "containerd.toml"
+    dest: /etc/containerd/config.toml
+
+- name: Generate crictl config
+  template:
+    src: "crictl.yaml"
+    dest: /etc/crictl.yaml
+
+- name: Prepare service
+  copy:
+    src: "containerd.service"
+    dest: "/usr/lib/systemd/system/containerd.service"
+
+- name: Start service
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: yes
+    daemon_reload: yes

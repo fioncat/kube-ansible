@@ -1,0 +1,3 @@
+runtime-endpoint: unix://{{ runtime.socket }}
+image-endpoint: unix://{{ runtime.socket }}
+timeout: 2

@@ -1,0 +1,11 @@
+---
+- name: Prepare directory
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+    - /etc/kubernetes
+    - /etc/kubernetes/pki
+
+- name: Copy cert files
+  copy:
+    src: "{{ kube_cert_dir }}/"
+    dest: "/etc/kubernetes/pki"

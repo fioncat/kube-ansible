@@ -5,23 +5,18 @@
 
     init_host: "{{ groups['init'][0] }}"
     init_node: "{% set host=groups['init'][0] %}{% set hostvar=hostvars[host] %}{% if 'node' in hostvar %}{{ hostvar['node'] }}{% else %}{{ host }}{% endif %}"
+    current_node: "{% set hostvar=hostvars[ansible_host] %}{% if 'node' in hostvar %}{{ hostvar['node'] }}{% else %}{{ host }}{% endif %}"
 
 - name: Set master nodes
   set_fact:
     master_nodes: "{% set nodes=[] %}{{ nodes.append(init_node) }}{% for host in groups['master'] %}{% set hostvar=hostvars[host] %}{% if 'node' in hostvar %}{{ nodes.append(hostvar['node']) }}{% else %}{{ nodes.append(host) }}{% endif %}{% endfor %}{{ nodes }}"
 
-- name: Set ectd cert
-  when: "cert == 'etcd'"
+- name: Set cert
   set_fact:
     etcd_cert_dns: "{{ etcd.extra_cert_dns }}"
     etcd_cert_ips: "{% set ips=[] %}{{ ips.extend(etcd_nodes) }}{{ ips.extend(etcd.extra_cert_ip) }}{{ ips }}"
-
-- name: Set kubernetes cert
-  when: "cert == 'kubernetes'"
-  set_fact:
     kube_cert_dns: "{{ apiserver.extra_cert_dns }}"
     kube_cert_ips: "{% set ips=[] %}{{ ips.extend(master_nodes) }}{{ ips.append(apiserver.endpoint) }}{{ ips.append(apiserver.cluster_ip) }}{{ ips.extend(apiserver.extra_cert_ip) }}{{ ips }}"
-
 
 - name: Set basic paths
   set_fact:
@@ -30,17 +25,13 @@
 
     etcd_bin_path: "{{ playbook_dir }}/bin/etcd_{{ etcd.version }}.tar.gz"
     containerd_bin_path: "{{ playbook_dir }}/bin/containerd_{{ runtime.version }}.tar.gz"
-    runc_bin_path: "{{ playbook_dir }}/bin/runc_{{ runtime.runc.version }}.tar.gz"
+    runc_bin_path: "{{ playbook_dir }}/bin/runc_{{ runtime.runc.version }}"
     crictl_bin_path: "{{ playbook_dir }}/bin/crictl_{{ runtime.crictl.version }}.tar.gz"
     cni_bin_path: "{{ playbook_dir }}/bin/cni_{{ runtime.cni.version }}.tar.gz"
 
 
-    kubelet_bin_path: "{{ playbook_dir }}/bin/kubelet_{{ cluster.version }}.tar.gz"
-    kubectl_bin_path: "{{ playbook_dir }}/bin/kubectl_{{ cluster.version }}.tar.gz"
-    kubeadm_bin_path: "{{ playbook_dir }}/bin/kubeadm_{{ cluster.version }}.tar.gz"
+    kubeadm_bin_path: "{{ playbook_dir }}/bin/kubeadm_{{ cluster.version }}"
+    kubelet_bin_path: "{{ playbook_dir }}/bin/kubelet_{{ cluster.version }}"
+    kubectl_bin_path: "{{ playbook_dir }}/bin/kubectl_{{ cluster.version }}"
 
     calico_yaml_path: "{{ playbook_dir }}/bin/calico_{{ calico.version }}.yaml"
-
-
-- name: Debug
-  debug: var=kube_cert_ips

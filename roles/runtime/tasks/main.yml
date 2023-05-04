@@ -1,0 +1,7 @@
+---
+- name: Install cni
+  when: "runtime.cni.enable"
+  import_tasks: cni.yml
+
+- name: Install containerd
+  import_tasks: containerd.yml

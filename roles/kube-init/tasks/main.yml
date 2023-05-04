@@ -1,0 +1,21 @@
+---
+- name: Init ipvs config
+  when: "apiserver.use_lvs"
+  shell: "{{ item }}"
+  ignore_errors: yes
+  with_items:
+    - "ip addr add {{ apiserver.endpoint }} dev lo label lo:0"
+    - "route add -host {{ apiserver.endpoint }} dev lo"
+    - "ipvsadm -A -t {{ apiserver.endpoint }}:6443 -s rr"
+    - "ipvsadm -a -t {{ apiserver.endpoint }}:6443 -r {{ current_node }}:6443 -g -w 1"
+
+- name: Generate config
+  template:
+    src: "kubeadm-init.yaml"
+    dest: "/etc/kubernetes"
+
+- name: Init kubernetes
+  shell: kubeadm init --config /etc/kubernetes/kubeadm-init.yaml
+
+- name: Prepare kubeconfig
+  import_tasks: "{{ playbook_dir }}/tasks/kubeconfig.yml"

@@ -1,9 +1,22 @@
 ---
 - name: Deploy etcd
   hosts: etcd
-  vars:
-    cert: "kubernetes"
   remote_user: root
   gather_facts: no
   roles:
     - setvars
+    - etcd-upload-cert
+    - etcd
+
+- name: Init kubernetes
+  hosts: init
+  remote_user: root
+  gather_facts: yes
+  roles:
+    - setvars
+    - kube-upload-cert
+    - renv
+    - runtime
+    - kubelet
+    - kube-init
+    - { role: calico, when: "calico.enable" }

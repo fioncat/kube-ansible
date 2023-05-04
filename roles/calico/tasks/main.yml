@@ -1,0 +1,22 @@
+---
+- name: Prepare directory
+  file: path="/etc/kubernetes/calico" state=directory mode=0755
+
+- name: Generate config
+  template:
+    src: "config.yaml"
+    dest: "/etc/kubernetes/calico"
+
+- name: Copy operator yaml
+  copy:
+    src: "{{ calico_yaml_path }}"
+    dest: "/etc/kubernetes/calico/operator.yaml"
+
+- name: Replace operator image
+  shell: 'sed -ie "s?quay.io/tigera/operator?{{ calico.operator_image }}?g" /etc/kubernetes/calico/operator.yaml'
+
+- name: Create resources
+  shell: "kubectl --kubeconfig /etc/kubernetes/admin.conf create -f {{ item }}"
+  with_items:
+    - "/etc/kubernetes/calico/operator.yaml"
+    - "/etc/kubernetes/calico/config.yaml"

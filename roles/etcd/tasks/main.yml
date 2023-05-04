@@ -1,0 +1,50 @@
+---
+- name: Generate etcd names
+  set_fact:
+    etcd_names: "{% set etcd_names={} %}{% for node in etcd_nodes %}{% set x=etcd_names.__setitem__(node, 'etcd{0}'.format(loop.index)) %}{% endfor %}{{ etcd_names }}"
+
+- name: Generate etcd urls
+  set_fact:
+    etcd_peers: "{% set urls=[] %}{% for node,name in etcd_names.items() %}{{ urls.append('{0}=https://{1}:2380'.format(name, node)) }}{% endfor %}{{ urls | join(',') }}"
+    etcd_endpoints: "{% set urls=[] %}{% for node in etcd_nodes %}{{ urls.append('https://{0}:2379'.format(node)) }}{% endfor %}{{ urls | join(',') }}"
+
+- name: Prepare directory
+  file: path="/var/lib/etcd" state=directory mode=0755
+
+- name: Generate config
+  template:
+    src: config.yaml
+    dest: /etc/etcd/config.yaml
+
+- name: Generate etcdctl config
+  template:
+    src: etcdctl.env
+    dest: /etc/etcd/etcdctl.env
+
+- name: Copy binary
+  copy:
+    src: "{{ etcd_bin_path }}"
+    dest: "/root/etcd.tar.gz"
+
+- name: Prepare binary
+  shell: "{{ item }}"
+  args:
+    chdir: "/root"
+  with_items:
+    - "tar xzf etcd.tar.gz"
+    - "mv etcd-v{{ etcd.version }}-linux-amd64/etcd /usr/local/bin"
+    - "mv etcd-v{{ etcd.version }}-linux-amd64/etcdctl /usr/local/bin"
+    - "rm etcd.tar.gz"
+    - "rm -rf etcd-v{{ etcd.version }}-linux-amd64"
+
+- name: Prepare service
+  copy:
+    src: "etcd.service"
+    dest: "/usr/lib/systemd/system/etcd.service"
+
+- name: Start service
+  systemd:
+    name: etcd
+    state: restarted
+    enabled: yes
+    daemon_reload: yes

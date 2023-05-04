@@ -6,6 +6,7 @@ etcd:
 
 runtime:
   version: "1.6.20"
+  socket_path: "/run/containerd/containerd.sock"
   runc:
     version: "1.1.7"
   crictl:
@@ -34,8 +35,7 @@ cluster:
   pod_cidr: "192.168.0.0/16"
 
   image_registry: "registry.cn-hangzhou.aliyuncs.com/google_containers"
-
-  cri_socket: "/run/containerd/containerd.sock"
+  sandbox_image: "registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.7"
 
 calico:
   enable: true

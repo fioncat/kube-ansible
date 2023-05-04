@@ -1,0 +1,43 @@
+---
+- name: Copy kubeadm binary
+  copy:
+    src: "{{ kubeadm_bin_path }}"
+    dest: "/usr/local/bin/kubeadm"
+    mode: "0755"
+
+- name: Copy kubelet binary
+  copy:
+    src: "{{ kubelet_bin_path }}"
+    dest: "/usr/local/bin/kubelet"
+    mode: "0755"
+
+- name: Copy kubectl binary
+  copy:
+    src: "{{ kubectl_bin_path }}"
+    dest: "/usr/local/bin/kubectl"
+    mode: "0755"
+
+- name: Prepare config directory
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+    - "/etc/kubernetes"
+    - "/etc/systemd/system/kubelet.service.d"
+
+- name: Prepare config
+  copy:
+    src: "10-kubeadm.conf"
+    dest: "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
+
+- name: Prepare service
+  copy:
+    src: "kubelet.service"
+    dest: "/usr/lib/systemd/system/kubelet.service"
+
+# The kubelet is now restarting every few seconds, as it
+# waits in a crashloop for kubeadm to tell it what to do.
+- name: Start service
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes
+    daemon_reload: yes

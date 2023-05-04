@@ -1,22 +1,11 @@
 ---
-- name: Generate etcd cert files
+- name: Generate cert files
   hosts: init
   gather_facts: no
   connection: local
   run_once: true
   vars:
-    cert: etcd
-  roles:
-    - setvars
-    - gencert
-
-- name: Generate kubernetes cert files
-  hosts: init
-  gather_facts: no
-  connection: local
-  run_once: true
-  vars:
-    cert: kubernetes
+    role: etcd
   roles:
     - setvars
     - gencert
