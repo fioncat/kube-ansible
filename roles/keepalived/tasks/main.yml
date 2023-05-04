@@ -1,0 +1,40 @@
+---
+- name: Prepare service
+  copy:
+    src: keepalived.service
+    dest: /usr/lib/systemd/system/keepalived.service
+
+- name: Use init
+  when: "real == 'init'"
+  set_fact:
+    keepalived_real_servers: "{% set reals=[] %}{{ reals.append(init_node) }}{{ reals }}"
+
+- name: Use current
+  when: "real == 'current'"
+  set_fact:
+    keepalived_real_servers: "{% set reals=[] %}{{ reals.append(current_node) }}{{ reals }}"
+
+- name: Add lo address
+  when: "real == 'current'"
+  ignore_errors: true
+  shell: "ip addr add {{ apiserver.endpoint }} dev lo label lo:0"
+
+- name: Use master
+  when: "real == 'master'"
+  set_fact:
+    keepalived_real_servers: "{{ master_nodes }}"
+
+- name: Generate config
+  template:
+    src: keepalived.conf
+    dest: /etc/keepalived/keepalived.conf
+
+- name: Clean ipvs rules
+  shell: ipvsadm -C
+
+- name: Start service
+  systemd:
+    name: keepalived
+    enabled: yes
+    daemon_reload: yes
+    state: restarted

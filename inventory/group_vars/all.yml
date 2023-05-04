@@ -17,8 +17,10 @@ runtime:
 
 apiserver:
   endpoint: "6.0.0.1"
-  # If use this, the endpoint will be treated as a vip
-  use_lvs: true
+  keepalived: true
+
+  cluster_ip: "192.1.0.1"
+
   extra_args: {}
 
   cert_expire_days: 3650
@@ -27,6 +29,8 @@ apiserver:
 
 cluster:
   version: "1.24.13"
+
+  bootstrap_token: "9a08jv.c0izixklcxtmnze7"
 
   name: "my-cluster"
   domain: "cluster.local"

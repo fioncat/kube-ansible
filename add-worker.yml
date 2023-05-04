@@ -1,0 +1,20 @@
+---
+- name: Refresh bootstrap token
+  hosts: init
+  remote_user: root
+  gather_facts: no
+  roles:
+    - kube-refresh-token
+
+- name: Add worker to kubernetes cluster
+  hosts: toadd
+  remote_user: root
+  gather_facts: yes
+  roles:
+    - setvars
+    - kube-upload-cert
+    - renv
+    - runtime
+    - kubelet
+    - { role: keepalived, when: "apiserver.keepalived", vars: { real: "master" } }
+    - kube-join-worker

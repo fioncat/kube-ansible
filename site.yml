@@ -8,15 +8,46 @@
     - etcd-upload-cert
     - etcd
 
-- name: Init kubernetes
-  hosts: init
+- name: Init kubernetes nodes
+  hosts:
+    - init
+    - master
+    - worker
   remote_user: root
   gather_facts: yes
   roles:
     - setvars
-    - kube-upload-cert
     - renv
     - runtime
     - kubelet
+
+- name: Init kubernetes cluster
+  hosts: init
+  remote_user: root
+  gather_facts: no
+  roles:
+    - setvars
+    - kube-upload-cert
+    - { role: keepalived, when: "apiserver.keepalived", vars: { real: "current" } }
     - kube-init
     - { role: calico, when: "calico.enable" }
+
+- name: Join kubernetes master
+  hosts: master
+  remote_user: root
+  gather_facts: no
+  roles:
+    - setvars
+    - kube-upload-cert
+    - { role: keepalived, when: "apiserver.keepalived", vars: { real: "init" } }
+    - kube-join-master
+    - { role: keepalived, when: "apiserver.keepalived", vars: { real: "current" } }
+
+- name: Join kubernetes worker
+  hosts: worker
+  remote_user: root
+  gather_facts: no
+  roles:
+    - setvars
+    - { role: keepalived, when: "apiserver.keepalived", vars: { real: "master" } }
+    - kube-join-worker

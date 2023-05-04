@@ -1,0 +1,19 @@
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    token: "{{ cluster.bootstrap_token }}"
+    apiServerEndpoint: "{{ apiserver.endpoint }}:6443"
+    unsafeSkipCAVerification: true
+nodeRegistration:
+  name: "{{ current_node }}"
+  criSocket: "unix://{{ runtime.socket }}"
+  kubeletExtraArgs: {}
+  ignorePreflightErrors:
+    - IsPrivilegedUser
+  imagePullPolicy: "IfNotPresent"
+controlPlane:
+  localAPIEndpoint:
+    advertiseAddress: "{{ current_node }}"
+    bindPort: 6443

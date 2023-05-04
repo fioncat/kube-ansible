@@ -1,0 +1,8 @@
+---
+- name: Get token status
+  shell: "kubeadm token list | grep '{{ cluster.bootstrap_token }}' | wc -l"
+  register: "status_out"
+
+- name: Refresh token
+  when: "status_out['stdout'] == '0'"
+  shell: "kubeadm token create --config /etc/kubernetes/kubeadm-init.yaml"
