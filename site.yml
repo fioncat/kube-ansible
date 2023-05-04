@@ -1,0 +1,9 @@
+---
+- name: Deploy etcd
+  hosts: etcd
+  vars:
+    cert: "kubernetes"
+  remote_user: root
+  gather_facts: no
+  roles:
+    - setvars

@@ -1,0 +1,46 @@
+etcd:
+  version: "3.4.25"
+  cert_expire_days: 3650
+  extra_dns: []
+  extra_ip: []
+
+runtime:
+  version: "1.6.20"
+  runc:
+    version: "1.1.7"
+  crictl:
+    version: "1.27.0"
+  cni:
+    enable: true
+    version: "1.2.0"
+
+apiserver:
+  endpoint: "6.0.0.1"
+  # If use this, the endpoint will be treated as a vip
+  use_lvs: true
+  extra_args: {}
+
+  cert_expire_days: 3650
+  extra_dns: []
+  extra_ip: []
+
+cluster:
+  version: "1.24.13"
+
+  name: "my-cluster"
+  domain: "cluster.local"
+
+  service_cidr: "192.1.0.0/16"
+  pod_cidr: "192.168.0.0/16"
+
+  image_registry: "registry.cn-hangzhou.aliyuncs.com/google_containers"
+
+  cri_socket: "/run/containerd/containerd.sock"
+
+calico:
+  enable: true
+  version: "3.25.1"
+
+  encapsulation: "VXLANCrossSubnet"
+  operator_image: "quay.io/tigera/operator"
+  image_registry: ""

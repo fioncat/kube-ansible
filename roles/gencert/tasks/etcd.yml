@@ -1,0 +1,54 @@
+---
+- name: Ensure directory
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+    - "{{ etcd_cert_dir }}"
+    - "{{ kube_cert_dir }}"
+
+- name: Generate config
+  template:
+    src: etcd.conf
+    dest: "{{ etcd_cert_dir }}/config"
+
+- name: Generate root ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ etcd_cert_dir }}"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out ca.key
+    - openssl req -x509 -new -sha256 -nodes -key ca.key -days {{ etcd.cert_expire_days }} -out ca.crt -subj "/CN=etcd-ca" -extensions v3_ca -config config
+    - cp {{ etcd_cert_dir }}/ca.crt {{ kube_cert_dir }}/etcd-ca.crt
+
+- name: Generate server ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ etcd_cert_dir }}"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out server.key
+    - openssl req -new -sha256 -key server.key -subj "/CN=kube-etcd" | openssl x509 -req -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days {{ etcd.cert_expire_days }} -extensions v3_server -extfile config
+
+- name: Generate peer ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ etcd_cert_dir }}"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out peer.key
+    - openssl req -new -sha256 -key peer.key -subj "/CN=kube-etcd-peer" | openssl x509 -req -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out peer.crt -days {{ etcd.cert_expire_days }} -extensions v3_server -extfile config
+
+- name: Generate healthcheck ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ etcd_cert_dir }}"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out healthcheck-client.key
+    - openssl req -new -sha256 -key healthcheck-client.key -subj "/CN=kube-etcd-healthcheck-client" | openssl x509 -req -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out healthcheck-client.crt -days {{ etcd.cert_expire_days }} -extensions v3_client -extfile config
+
+- name: Generate apiserver-etcd ca
+  shell: "{{item}}"
+  args:
+    chdir: "{{ etcd_cert_dir }}"
+  with_items:
+    - openssl ecparam -name secp521r1 -genkey -noout -out apiserver-etcd-client.key
+    - openssl req -new -sha256 -key apiserver-etcd-client.key -subj "/CN=kube-apiserver-etcd-client/O=system:masters" | openssl x509 -req -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out apiserver-etcd-client.crt -days {{ etcd.cert_expire_days }} -extensions v3_client -extfile config
+    - mv {{ etcd_cert_dir }}/apiserver-etcd-client.key {{ kube_cert_dir }}/apiserver-etcd-client.key
+    - mv {{ etcd_cert_dir }}/apiserver-etcd-client.crt {{ kube_cert_dir }}/apiserver-etcd-client.crt

@@ -1,0 +1,8 @@
+---
+- name: gencert for etcd
+  when: "cert == 'etcd'"
+  import_tasks: etcd.yml
+
+- name: gencert for kubernetes
+  when: "cert == 'kubernetes'"
+  import_tasks: kubernetes.yml
