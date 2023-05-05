@@ -20,13 +20,12 @@ It is recommended to prepare at least 3 machines for deploying the Kubernetes cl
 
 The machines must meet the following requirements:
 
-- The operating system must be Linux, and the currently supported distributions are `CentOS` and `Ubuntu`.
+- The operating system must be `Linux` with architecture `amd64`. Currently recommended distributions are `CentOS` and `Ubuntu`.
 - The machine specification should not be less than `2C 4GiB`, otherwise, some Kubernetes components may have problems running.
-- The machines must be networked, and NAT is not required for conversion.
+- The networks between machines must be interconnected without NAT.
 - The software package source is correctly configured, and dependencies can be downloaded using package managers such as `yum` or `apt`.
-- The firewall is correctly configured, and some common ports of Kubernetes should be opened.
 
-Here, we assume that we have the following 4 machines:
+Here, let's assume that we have the following 4 machines:
 
 - 10.0.0.1: The first `control-plane` node, which is also used to initialize the cluster with `kubeadm init`.
 - 10.0.0.2: The second `control-plane` node.
@@ -34,6 +33,8 @@ Here, we assume that we have the following 4 machines:
 - 10.0.0.4: The `worker` node.
 
 `etcd` will be integrated into the 3 `control-plane` nodes.
+
+In addition, you will need a machine to execute the Ansible Playbook. It should be able to access the cluster machines and have SSH key-based authentication configured.
 
 Edit [inventory/all](inventory/all) and add the above nodes. Note that the first `control-plane` node is used to initialize the cluster and should be configured in the `init` group separately, instead of in the `master` group:
 
@@ -54,7 +55,7 @@ Edit [inventory/all](inventory/all) and add the above nodes. Note that the first
 10.0.0.4
 ```
 
-If the machine that executes `ansible` cannot access the intranet and needs to log in through the external IP, you can configure the intranet IP through `node`:
+If the machine that executes Ansible cannot access the intranet and needs to login through the external IP, you can configure the intranet IP through `node`:
 
 ```config
 [etcd]
@@ -73,7 +74,7 @@ If the machine that executes `ansible` cannot access the intranet and needs to l
 106.75.0.4 node=10.0.0.4
 ```
 
-In the example above, `106.74.0.*` is the external IP used for `ansible` remote login to the nodes, and `10.0.0.*` is the intranet IP used for internal access within the cluster.
+In the example above, `106.74.0.*` is the external IP used for Ansible remote login to the nodes, and `10.0.0.*` is the intranet IP used for internal access within the cluster.
 
 ## Cluster Configuration
 
@@ -103,15 +104,14 @@ runtime:
     version: "1.2.0"
 
 apiserver:
-  # The access address of the APIServer, generally a load balancer address.
-  # If keepalived is used, it will exist as a VIP. Can only be accessed within
-  # nodes.
+  # For accessing the API server within the cluster, usually a load balancer address or DNS.
+  # If Keepalived is enabled, it will be used as a keepalived VIP.
   endpoint: "6.0.0.6"
 
   # Whether to enable keepalived. If the number of control-planes is fixed, it
   # is strongly recommended to enable it.
   # If there is a future need to increase the number of control-planes, it is
-  # recommended to disable it and use an independent load balancer.
+  # recommended to disable it and use an independent load balancer instead.
   # Note that once enabled, the endpoint will become a VIP and can only be used
   # within the cluster nodes. If external access to the APIServer is required,
   # please install an independent load balancer.
@@ -133,13 +133,14 @@ apiserver:
   extra_cert_ip: []
 
 cluster:
-  # Kubernetes cluster version, kubelet, kubeadm, kubectl, and all control and
+  # Kubernetes cluster version. kubelet, kubeadm, kubectl, and all control
   # components will remain consistent.
   version: "1.24.13"
 
-  # The bootstrap token used for kubeadm join has formatting requirements, see: https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/
+  # The bootstrap token used for kubeadm join has formatting requirements,
   # This token will expire every 24 hours and will be automatically detected and
   # refreshed when executing the `add-worker` playbook.
+  # See: https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/
   bootstrap_token: "9a08jv.c0izixklcxtmnze7"
 
   name: "my-cluster"
@@ -159,7 +160,7 @@ calico:
   # Whether to enable the Calico network plugin. It is strongly recommended to
   # enable it, otherwise only kubenet can be used and Pods may not be able to
   # access across nodes.
-  # For more information about Calico, see: https://docs.tigera.io/calico/latest/about/
+  # See: https://docs.tigera.io/calico/latest/about/
   enable: true
   version: "3.25.1"
 
@@ -175,11 +176,11 @@ After configuration, you need to download all the binary files required for depl
 python3 download.py inventory
 ```
 
-All the binaries will be downloaded to `./bin` directory, and they will be uploaded to the servers by `ansible` during deployment.
+All the binaries will be downloaded to `./bin` directory, and they will be uploaded to the servers by Ansible during deployment.
 
 ## Generating Certificates
 
-Before starting the deployment, you need to generate all the SSL certificate files required by the cluster. The certificate generation is done locally, so please make sure that your machine has `openssl` tool installed correctly.
+Before starting the deployment, you need to generate all the SSL certificate files required by the cluster. The certificate generation is done locally, so please make sure that your Ansible machine has `openssl` tool installed correctly.
 
 To generate the certificates, run the following command:
 
@@ -212,13 +213,16 @@ NAME       STATUS   ROLES           AGE   VERSION
 10.0.0.3   Ready    control-plane   55m   v1.24.13
 ```
 
-> Note that the nodes may still be in `NotReady` status within a few minutes after the completion of ansible execution, which is normal because Calico needs some time to initialize.
+> Note that the nodes may still be in `NotReady` status within a few minutes after the completion of Ansible execution, which is normal because Calico needs some time to initialize.
+> You can use `kubectl describe node` to check if Kubelet is not ready due to `cni plugin not initialized`.
 
-You can observe if the control components, coredns, and Calico are deployed correctly by running:
+You can observe if the control components are deployed correctly by running:
 
 ```bash
-kubectl get po -A
+kubectl -n kube-system get po
 ```
+
+`kubeadm` will deploy all control components as Pod in `kube-system` namespace.
 
 ## Adding Worker Nodes
 
